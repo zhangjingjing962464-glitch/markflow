@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MarkFlow - 知识库转换工具</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- 动态背景 -->
+    <div class="bg-shape bg-shape-1"></div>
+    <div class="bg-shape bg-shape-2"></div>
+
+    <div class="app-container">
+        <!-- 顶部导航 -->
+        <header class="topbar">
+            <div class="logo" id="logo">
+                <span class="logo-m">M</span><span class="logo-ark">ark</span>
+                <span class="logo-dot"></span>
+                <span class="logo-f">F</span><span class="logo-low">low</span>
+            </div>
+            <div class="topbar-actions">
+                <button class="icon-btn" title="设置" id="settingsBtn">
+                    <i class="ph ph-gear-six"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- 主要内容区 -->
+        <main class="main-content">
+            <!-- 左侧：输入与控制区 -->
+            <section class="control-panel panel-glass">
+                <div class="tabs">
+                    <button class="tab-btn active" data-tab="tab-word">
+                        <i class="ph ph-file-doc"></i> Word文档
+                    </button>
+                    <button class="tab-btn" data-tab="tab-link">
+                        <i class="ph ph-link"></i> 网页/微信
+                    </button>
+                    <button class="tab-btn" data-tab="tab-text">
+                        <i class="ph ph-text-T"></i> 粘贴文本
+                    </button>
+                    <div class="tab-indicator"></div>
+                </div>
+
+                <div class="tab-content-container">
+                    <!-- Word 上传面板（支持批量） -->
+                    <div class="tab-content active" id="tab-word">
+                        <div class="upload-area" id="drop-zone">
+                            <i class="ph ph-upload-simple upload-icon"></i>
+                            <h3>拖拽 Word 文件至此</h3>
+                            <p>支持 .docx 格式，可批量上传多个文件</p>
+                            <button class="btn btn-secondary">浏览文件</button>
+                            <input type="file" id="file-input" accept=".docx" multiple hidden>
+                        </div>
+                        <div class="file-list" id="file-list"></div>
+                    </div>
+
+                    <!-- 链接面板（支持批量） -->
+                    <div class="tab-content" id="tab-link">
+                        <div class="input-group">
+                            <label>文章链接 <span class="hint">（每行一个，支持批量）</span></label>
+                            <textarea class="url-textarea" id="url-input" placeholder="https://mp.weixin.qq.com/s/...&#10;https://zhuanlan.zhihu.com/p/...&#10;支持微信公众号、知乎、CSDN等" rows="5"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- 文本面板 -->
+                    <div class="tab-content" id="tab-text">
+                        <div class="input-group full-height">
+                            <textarea placeholder="在此处粘贴您的文本内容..." id="raw-text-input"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 底部操作与设置 -->
+                <div class="bottom-actions">
+                    <div class="settings-summary">
+                        <i class="ph ph-folder-open"></i>
+                        <span id="output-path-label">输出路径加载中...</span>
+                    </div>
+                    <div class="convert-btn-wrapper">
+                        <button class="btn btn-primary btn-convert" id="convert-btn">
+                            <i class="ph ph-lightning"></i>
+                            <span>开始转换</span>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 右侧：预览与编辑区 -->
+            <section class="preview-panel panel-glass">
+                <div class="preview-header">
+                    <div class="preview-title">
+                        <i class="ph ph-eye"></i> 预览 & 编辑
+                    </div>
+                    <div class="preview-toggles">
+                        <button class="toggle-btn active" data-view="split">分屏</button>
+                        <button class="toggle-btn" data-view="edit">源码</button>
+                        <button class="toggle-btn" data-view="render">效果</button>
+                    </div>
+                    <div class="preview-actions">
+                        <button class="btn btn-small btn-secondary" id="copy-btn">
+                            <i class="ph ph-copy"></i> 复制
+                        </button>
+                        <button class="btn btn-small btn-primary" id="save-btn">
+                            <i class="ph ph-floppy-disk"></i> 保存
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 工具栏 -->
+                <div class="editor-toolbar" id="editor-toolbar">
+                    <button class="toolbar-btn" data-action="bold" title="加粗 (Ctrl+B)"><i class="ph ph-text-bolder"></i></button>
+                    <button class="toolbar-btn" data-action="italic" title="斜体 (Ctrl+I)"><i class="ph ph-text-italic"></i></button>
+                    <button class="toolbar-btn" data-action="strikethrough" title="删除线"><i class="ph ph-text-strikethrough"></i></button>
+                    <span class="toolbar-divider"></span>
+                    <button class="toolbar-btn" data-action="h1" title="一级标题">H1</button>
+                    <button class="toolbar-btn" data-action="h2" title="二级标题">H2</button>
+                    <button class="toolbar-btn" data-action="h3" title="三级标题">H3</button>
+                    <span class="toolbar-divider"></span>
+                    <button class="toolbar-btn" data-action="ul" title="无序列表"><i class="ph ph-list-bullets"></i></button>
+                    <button class="toolbar-btn" data-action="ol" title="有序列表"><i class="ph ph-list-numbers"></i></button>
+                    <button class="toolbar-btn" data-action="quote" title="引用"><i class="ph ph-quotes"></i></button>
+                    <button class="toolbar-btn" data-action="code" title="代码块 (Ctrl+`)"><i class="ph ph-code"></i></button>
+                    <span class="toolbar-divider"></span>
+                    <button class="toolbar-btn" data-action="link" title="插入链接 (Ctrl+K)"><i class="ph ph-link"></i></button>
+                    <button class="toolbar-btn" data-action="image" title="插入图片"><i class="ph ph-image"></i></button>
+                    <button class="toolbar-btn" data-action="table" title="插入表格"><i class="ph ph-table"></i></button>
+                    <span class="toolbar-divider"></span>
+                    <button class="toolbar-btn" data-action="hr" title="分割线"><i class="ph ph-minus"></i></button>
+                </div>
+                
+                <div class="preview-body view-split" id="preview-body">
+                    <!-- 编辑区 -->
+                    <div class="editor-pane">
+                        <textarea id="markdown-editor" spellcheck="false" placeholder="Markdown 源码将在这里显示，您可以直接修改..."></textarea>
+                    </div>
+                    <!-- 渲染区 -->
+                    <div class="render-pane" id="markdown-render">
+                        <div class="empty-state">
+                            <i class="ph ph-magic-wand"></i>
+                            <p>转换后的内容将在此预览</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- 转换进度弹窗 -->
+    <div class="modal-overlay" id="loading-modal">
+        <div class="modal-card panel-glass">
+            <div class="spinner"></div>
+            <h3 id="loading-title">正在转换</h3>
+            <p id="loading-desc">正在解析文档格式并提取图片...</p>
+            <div class="progress-bar-wrapper" id="batch-progress" style="display:none">
+                <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+                <span class="progress-text" id="progress-text">0/0</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 设置弹窗 -->
+    <div class="modal-overlay" id="settings-modal">
+        <div class="settings-card panel-glass">
+            <div class="settings-header">
+                <h3><i class="ph ph-gear-six"></i> 设置</h3>
+                <button class="icon-btn" id="close-settings">
+                    <i class="ph ph-x"></i>
+                </button>
+            </div>
+            <div class="settings-body">
+                <!-- 外观主题 -->
+                <div class="settings-group">
+                    <label class="settings-label">外观主题</label>
+                    <div class="theme-switcher">
+                        <button class="theme-option active" data-theme="light" id="theme-light">
+                            <i class="ph ph-sun"></i> 浅色
+                        </button>
+                        <button class="theme-option" data-theme="dark" id="theme-dark">
+                            <i class="ph ph-moon"></i> 深色
+                        </button>
+                    </div>
+                </div>
+                <hr class="settings-divider">
+                <!-- 输出目录 -->
+                <div class="settings-group">
+                    <label class="settings-label">输出目录</label>
+                    <p class="settings-hint">转换后的 Markdown 文件和图片将保存在此目录下，以文章标题命名子文件夹。</p>
+                    <div class="settings-input-row">
+                        <div class="input-wrapper">
+                            <i class="ph ph-folder-open input-icon"></i>
+                            <input type="text" id="output-dir-input" placeholder="/Users/you/Documents/知识库">
+                        </div>
+                    </div>
+                    <div class="settings-path-preview" id="path-preview">
+                        <i class="ph ph-tree-structure"></i>
+                        <code><span id="preview-dir"></span>/<span class="dim">文章标题</span>/<br>&nbsp;&nbsp;├── <span class="dim">文章标题</span>.md<br>&nbsp;&nbsp;└── images/<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├── image_1.png<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└── ...</code>
+                    </div>
+                </div>
+            </div>
+            <div class="settings-footer">
+                <button class="btn btn-secondary" id="reset-output-dir">恢复默认</button>
+                <button class="btn btn-primary" id="save-output-dir">保存设置</button>
+            </div>
+        </div>
+    </div>
+
+
+    <script src="js/app.js"></script>
+</body>
+</html>
